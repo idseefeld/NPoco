@@ -190,6 +190,7 @@ namespace NPoco.Tests.DecoratedTests.QueryTests
         [Test]
         public void FetchWithStoredProcedure()
         {
+            IgnoreOnPostgres("TestProc is a SQL Server stored procedure");
             var theName = "TheName";
             var name = Database.ExecuteScalar<string>("TestProc", CommandType.StoredProcedure, new SqlParameter("Name", theName));
             Assert.AreEqual(theName, name);
@@ -198,6 +199,7 @@ namespace NPoco.Tests.DecoratedTests.QueryTests
         [Test]
         public void FetchWithStoredProcedure2()
         {
+            IgnoreOnPostgres("TestProc is a SQL Server stored procedure");
             var theName = "TheName";
             var name = Database.ExecuteScalar<string>("TestProc", CommandType.StoredProcedure, new { Name = theName });
             Assert.AreEqual(theName, name);

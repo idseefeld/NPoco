@@ -314,7 +314,7 @@ namespace NPoco.Tests.DecoratedTests
             Assert.AreEqual(userAfterCreate.Name, nameInsert);
 
 
-            var dbTrans = new Database(TestDatabase.ConnectionString, TestDatabase.DbType, SqlClientFactory.Instance);
+            var dbTrans = new Database(TestDatabase.ConnectionString, TestDatabase.DbType, TestDatabase.Factory);
             dbTrans.BeginTransaction();
 
             user.Name = nameUpdate;
@@ -359,7 +359,7 @@ namespace NPoco.Tests.DecoratedTests
             Assert.AreEqual(userAfterCreate.Name, nameInsert);
 
 
-            var dbTrans = new Database(TestDatabase.ConnectionString, TestDatabase.DbType, SqlClientFactory.Instance);
+            var dbTrans = new Database(TestDatabase.ConnectionString, TestDatabase.DbType, TestDatabase.Factory);
             dbTrans.BeginTransaction();
 
             user.Name = nameUpdate;

@@ -157,7 +157,8 @@ namespace NPoco.Tests.FluentTests.QueryTests
         {
             var user = Database.Single<User>("select u.* from users u where u.ansistring = @0", new AnsiString("My Ansi: 1"));
 
-            Assert.True(((Database)Database).LastCommand.Contains(" VarChar(4000)"));
+            if (!IsPostgres) // SqlClient formats the parameter type into the command text
+                Assert.True(((Database)Database).LastCommand.Contains(" VarChar(4000)"));
             Assert.NotNull(user);
             AssertUserValues(InMemoryUsers[0], user);
         }

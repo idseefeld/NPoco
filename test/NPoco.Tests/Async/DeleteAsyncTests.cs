@@ -33,7 +33,7 @@ namespace NPoco.Tests.Async
                 var source = new CancellationTokenSource();
                 source.Cancel();
 
-                Assert.ThrowsAsync<TaskCanceledException>(() => Database.DeleteAsync(poco, source.Token));
+                Assert.CatchAsync<OperationCanceledException>(() => Database.DeleteAsync(poco, source.Token));
 
                 var verify = await Database.QueryAsync<User>().Where(x => x.UserId == InMemoryUsers[1].UserId)
                     .SingleOrDefault();

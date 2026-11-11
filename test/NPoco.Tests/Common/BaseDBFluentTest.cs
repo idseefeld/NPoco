@@ -28,6 +28,7 @@ namespace NPoco.Tests.Common
         [OneTimeSetUp]
         public void SetUp()
         {
+            TestDatabase?.Dispose();
             var types = new[] { typeof(User), typeof(ExtraUserInfo), typeof(UserWithExtraInfo), typeof(Usersss), typeof(House), typeof(Supervisor) };
             var dbFactory = new DatabaseFactory();
             //DatabaseFactory.ColumnSerializer = new JsonNetColumnSerializer();
@@ -45,9 +46,7 @@ namespace NPoco.Tests.Common
             });
             dbFactory.Config().WithFluentConfig(config);
 
-            var configuration = new ConfigurationBuilder()
-                .AddJsonFile("config.json")
-                .Build();
+            var configuration = TestConfig.Configuration;
 
             var testDBType = Convert.ToInt32(configuration.GetSection("TestDBType").Value);
             switch (testDBType)
@@ -68,9 +67,13 @@ namespace NPoco.Tests.Common
                 case 4: // SQL CE
                 case 5: // MySQL
                 case 6: // Oracle
-                case 7: // Postgres
                     Assert.Fail("Database platform not supported for unit testing");
                     return;
+                case 7: // Postgres
+                    TestDatabase = new PostgreSQLDatabase(TestConfig.PostgresConnectionString);
+                    Database = dbFactory.Build(new Database(TestDatabase.Connection, TestDatabase.DbType));
+                    Database.Mappers.Insert(0, new SqlTestDefaultMapper());
+                    break;
                 case 8: // Firebird
                     TestDatabase = new FirebirdDatabase();
                     var db = new Database(TestDatabase.Connection, new FirebirdDatabaseType());

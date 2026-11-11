@@ -14,7 +14,7 @@ namespace NPoco.Tests.DecoratedTests.CRUDTests
         {
             const string dataName = "John Doe";
             const int dataAge = 56;
-            const decimal dataSavings = (decimal)345.23;
+            const decimal dataSavings = 345.23m;
             var dataDateOfBirth = DateTime.Now;
 
             var poco = new UserDecorated();

@@ -335,7 +335,7 @@ namespace NPoco.Tests.FluentTests.QueryTests
                 .OnlyFields(x => x.Name)
                 .Execute(new User() {Name = "test"});
 
-            var users = Database.Fetch<User>();
+            var users = Database.Query<User>().OrderBy(x => x.UserId).ToList();
 
             for (int i = 0; i < 4; i++)
             {

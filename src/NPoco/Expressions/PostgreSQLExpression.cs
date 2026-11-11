@@ -16,12 +16,12 @@ namespace NPoco.Expressions
             string sql;
             switch (memberName)
             {
-                case "Year": sql = $"EXTRACT(YEAR FROM TIMESTAMP {m})"; break;
-                case "Month": sql = $"EXTRACT(MONTH FROM TIMESTAMP {m})"; break;
-                case "Day": sql = $"EXTRACT(DAY FROM TIMESTAMP {m})"; break;
-                case "Hour": sql = $"EXTRACT(HOUR FROM TIMESTAMP {m})"; break;
-                case "Minute": sql = $"EXTRACT(MINUTE FROM TIMESTAMP {m})"; break;
-                case "Second": sql = $"EXTRACT(SECOND FROM TIMESTAMP {m})"; break;
+                case "Year": sql = $"EXTRACT(YEAR FROM {m})"; break;
+                case "Month": sql = $"EXTRACT(MONTH FROM {m})"; break;
+                case "Day": sql = $"EXTRACT(DAY FROM {m})"; break;
+                case "Hour": sql = $"EXTRACT(HOUR FROM {m})"; break;
+                case "Minute": sql = $"EXTRACT(MINUTE FROM {m})"; break;
+                case "Second": sql = $"EXTRACT(SECOND FROM {m})"; break;
                 default: throw new NotSupportedException("Not Supported " + memberName);
             }
             return sql;

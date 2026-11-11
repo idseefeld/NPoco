@@ -58,7 +58,7 @@ namespace NPoco.Tests.NewMapper
         [Test]
         public void Test4_2()
         {
-            var data = Database.Fetch<string[]>("select 'Name' Name, null npoco_wow, '4' Day, 'AUD' money__currency /*poco_dual*/").Single();
+            var data = Database.Fetch<string[]>("select 'Name' Name, null npoco_wow, '4' as Day, 'AUD' money__currency /*poco_dual*/").Single();
             Assert.AreEqual("Name", data[0]);
             Assert.AreEqual("4", data[1]);
             Assert.AreEqual("AUD", data[2]);
@@ -272,7 +272,8 @@ select 5 OneId,'Name5' Name, null Items__Value, null Items__Currency /*poco_dual
             var ones = Database.FetchOneToMany<One>(x => x.Items, @"
 select o.*, null npoco_items, m.*
 from ones o
-left join manys m on o.oneid = m.oneid");
+left join manys m on o.oneid = m.oneid
+order by o.oneid");
 
             Assert.AreEqual(15, ones.Count);
             AssertOnes(ones);
@@ -284,7 +285,8 @@ left join manys m on o.oneid = m.oneid");
             var ones = Database.FetchOneToMany<One>(x => x.Items, @"
 select o.*, 'MyName' nested__name, null npoco_items, m.*
 from ones o
-left join manys m on o.oneid = m.oneid");
+left join manys m on o.oneid = m.oneid
+order by o.oneid");
 
             Assert.AreEqual(15, ones.Count);
             Assert.AreEqual("MyName", ones[0].Nested.Name);
@@ -297,7 +299,8 @@ left join manys m on o.oneid = m.oneid");
             var ones = Database.FetchOneToMany<One>(x => x.Items, @"
 select o.*, 'MyName' nested__name, m.*
 from ones o
-left join manys m on o.oneid = m.oneid");
+left join manys m on o.oneid = m.oneid
+order by o.oneid");
 
             Assert.AreEqual(15, ones.Count);
             Assert.AreEqual("MyName", ones[0].Nested.Name);
@@ -470,7 +473,7 @@ select 22 Money__Value /*poco_dual*/");
         [Test]
         public void Test22_3()
         {
-            var result = Database.Single<Ticket>("SELECT '8440F7B5-F1A6-E911-8100-005056833617' as [TID], '3686a4b6-75a6-e911-8e46-5cc5d488af58' as [OID], '3686a4b6-75a6-e911-8e46-5cc5d488af58' as [Order__OID], 'the desc' as [Order__Description] /*poco_dual*/");
+            var result = Database.Single<Ticket>("SELECT '8440F7B5-F1A6-E911-8100-005056833617' as TID, '3686a4b6-75a6-e911-8e46-5cc5d488af58' as OID, '3686a4b6-75a6-e911-8e46-5cc5d488af58' as Order__OID, 'the desc' as Order__Description /*poco_dual*/");
             Assert.AreEqual("the desc", result.Order.Description);
             Assert.AreEqual(Guid.Parse("8440F7B5-F1A6-E911-8100-005056833617"), result.TID);
         }
@@ -523,7 +526,7 @@ select 22 Money__Value /*poco_dual*/");
             });
             var data = Database.Fetch<ContentBase>(@"
 select 'NamePost' Name, 'Post' type /*poco_dual*/
-union
+union all
 select 'NameAnswer' Name, 'Answer' type /*poco_dual*/
 ").ToList();
 
@@ -596,6 +599,7 @@ select 'NameAnswer' Name, 'Answer' type /*poco_dual*/
         [Test]
         public void Test28()
         {
+            IgnoreOnPostgres("Postgres folds unquoted column aliases to lower case, which changes the dictionary keys");
             var data = Database.Fetch<Test28Class>("select 3 Id, 'Name' Name, null, 'dyn' Dynamic__Value1, 'dict' Dict__Value2, null npoco_Nest1__Dict2," +
                                                    " 'dictnested' Value3, null npoco_Dict2__Value4, 'my string' S, 5 I, null npoco, 'oh my' DictHell__Key1__Dict2__Key2__S, 99 DictInt__ints," +
                                                    " 'z' NestMe__Nested__Nest3__Z, 'dictsupernesed' NestMe__Nested__Dict4__MyKey__S").Single();
@@ -719,6 +723,7 @@ select 'NameAnswer' Name, 'Answer' type /*poco_dual*/
         [Test]
         public void Test32()
         {
+            IgnoreOnPostgres("Postgres inserts append RETURNING on the conventional Id primary key, which NoPrimaryKey's table doesn't have");
             var data = Database.Insert(new NoPrimaryKey());
         }
 

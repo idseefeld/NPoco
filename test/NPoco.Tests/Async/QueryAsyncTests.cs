@@ -35,7 +35,7 @@ namespace NPoco.Tests.Async
             var source = new CancellationTokenSource();
             source.Cancel();
 
-            Assert.ThrowsAsync<TaskCanceledException>(() =>
+            Assert.CatchAsync<OperationCanceledException>(() =>
                 Database.Query<User>().Where(x => x.UserId == 1).ToListAsync(source.Token));
         }
         
@@ -60,7 +60,7 @@ namespace NPoco.Tests.Async
             var source = new CancellationTokenSource(1);
             source.Cancel();
 
-            Assert.ThrowsAsync<TaskCanceledException>(() =>
+            Assert.CatchAsync<OperationCanceledException>(() =>
                 Database.Query<User>().Where(x => x.UserId == 1).SingleAsync(source.Token));
         }
 
@@ -86,7 +86,7 @@ namespace NPoco.Tests.Async
             var source = new CancellationTokenSource();
             source.Cancel();
 
-            Assert.ThrowsAsync<TaskCanceledException>(() =>
+            Assert.CatchAsync<OperationCanceledException>(() =>
                 Database.Query<User>().CountAsync(source.Token));
         }
 
@@ -111,7 +111,7 @@ namespace NPoco.Tests.Async
         {
             var source = new CancellationTokenSource();
             source.Cancel();
-            Assert.ThrowsAsync<TaskCanceledException>(() => Database.Query<User>().ProjectToAsync(x => new { x.Name }, source.Token));
+            Assert.CatchAsync<OperationCanceledException>(() => Database.Query<User>().ProjectToAsync(x => new { x.Name }, source.Token));
         }
 
         [Test]
@@ -142,7 +142,7 @@ namespace NPoco.Tests.Async
         {
             var source = new CancellationTokenSource();
             source.Cancel();
-            Assert.ThrowsAsync<TaskCanceledException>(() => Database.PageAsync<User>(2, 5, "SELECT u.* FROM Users u WHERE UserID <= 15", source.Token));
+            Assert.CatchAsync<OperationCanceledException>(() => Database.PageAsync<User>(2, 5, "SELECT u.* FROM Users u WHERE UserID <= 15", source.Token));
         }
 
         [Test]
@@ -167,7 +167,7 @@ namespace NPoco.Tests.Async
         {
             var source = new CancellationTokenSource();
             source.Cancel();
-            Assert.ThrowsAsync<TaskCanceledException>(() => Database.FetchMultipleAsync<User, House>("select * from users;select * from houses", source.Token));
+            Assert.CatchAsync<OperationCanceledException>(() => Database.FetchMultipleAsync<User, House>("select * from users;select * from houses", source.Token));
         }
 
         [Test]
@@ -200,7 +200,7 @@ namespace NPoco.Tests.Async
             source.Cancel();
             var i = 1;
             var userCount = Database.QueryAsync<User>("select * from users", source.Token);
-            Assert.ThrowsAsync<TaskCanceledException>(async () =>
+            Assert.CatchAsync<OperationCanceledException>(async () =>
             {
                 await foreach (var item in userCount)
                 {
@@ -234,9 +234,9 @@ namespace NPoco.Tests.Async
             var source = new CancellationTokenSource();
             source.Cancel();
 
-            Assert.ThrowsAsync<TaskCanceledException>(() =>
+            Assert.CatchAsync<OperationCanceledException>(() =>
                 Database.FirstOrDefaultAsync<User>("where userid = @0", 1, source.Token));
-            Assert.ThrowsAsync<TaskCanceledException>(() =>
+            Assert.CatchAsync<OperationCanceledException>(() =>
                 Database.FirstAsync<User>("where userid = @0", 1, source.Token));
         }
 

@@ -15,6 +15,7 @@ namespace NPoco.Tests.NewMapper
                 .Query<User>()
                 .Include(x => x.House)
                 .Include(x => x.ExtraUserInfo)
+                .OrderBy(x => x.UserId)
                 .ToEnumerable()
                 .ToList();
 
@@ -46,6 +47,7 @@ namespace NPoco.Tests.NewMapper
                 .Include(X => X.Items.First().One)
                 .Include(X => X.Items[0].One)
                 .IncludeMany(x => x.Items)
+                .OrderBy(x => x.OneId)
                 .ToList();
 
             Assert.AreEqual(null, result[0].Items);

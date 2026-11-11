@@ -63,7 +63,7 @@ namespace NPoco.Tests.Async
             var source = new CancellationTokenSource();
             source.Cancel();
 
-            Assert.ThrowsAsync<TaskCanceledException>(() => Database.InsertAsync(user, source.Token));
+            Assert.CatchAsync<OperationCanceledException>(() => Database.InsertAsync(user, source.Token));
         }
 
         [Test]

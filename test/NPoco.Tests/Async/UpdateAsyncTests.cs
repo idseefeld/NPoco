@@ -61,7 +61,7 @@ namespace NPoco.Tests.Async
             var source = new CancellationTokenSource();
             source.Cancel();
 
-            Assert.ThrowsAsync<TaskCanceledException>(() => Database.UpdateAsync(poco, source.Token));
+            Assert.CatchAsync<OperationCanceledException>(() => Database.UpdateAsync(poco, source.Token));
         }
     }
 }

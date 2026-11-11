@@ -15,9 +15,7 @@ namespace NPoco.Tests
         [OneTimeSetUp]
         public void SetUp()
         {
-            var configuration = new ConfigurationBuilder()
-                .AddJsonFile("config.json")
-                .Build();
+            var configuration = TestConfig.Configuration;
 
             testDBType = Convert.ToInt32(configuration.GetSection("TestDBType").Value);
             switch (testDBType)
@@ -35,9 +33,11 @@ namespace NPoco.Tests
                 case 4: // SQL CE
                 case 5: // MySQL
                 case 6: // Oracle
-                case 7: // Postgres
                     Assert.Fail("Database platform not supported for unit testing");
                     return;
+                case 7: // Postgres
+                    TestDatabase = new PostgreSQLDatabase(TestConfig.PostgresConnectionString);
+                    break;
                 case 8: // Firebird
                     TestDatabase = new FirebirdDatabase();
                     break;
@@ -207,7 +207,7 @@ namespace NPoco.Tests
         public void ConstructorWithConnectionStringAndProviderName()
         {
             var dbType = GetConfiguredDatabaseType();
-            var db = new Database(TestDatabase.ConnectionString, dbType, SqlClientFactory.Instance);
+            var db = new Database(TestDatabase.ConnectionString, dbType, TestDatabase.Factory);
             db.OpenSharedConnection();
             Assert.IsNotNull(db.Connection);
             Assert.IsTrue(db.Connection.State == ConnectionState.Open);
@@ -225,7 +225,7 @@ namespace NPoco.Tests
         public void ConstructorWithConnectionStringProviderNameAndSettings()
         {
             var dbType = GetConfiguredDatabaseType();
-            var db = new Database(TestDatabase.ConnectionString, dbType, SqlClientFactory.Instance);
+            var db = new Database(TestDatabase.ConnectionString, dbType, TestDatabase.Factory);
             db.OpenSharedConnection();
             Assert.IsNotNull(db.Connection);
             Assert.IsTrue(db.Connection.State == ConnectionState.Open);
@@ -243,7 +243,7 @@ namespace NPoco.Tests
         public void ConstructorWithConnectionStringAndDBType()
         {
             var dbType = GetConfiguredDatabaseType();
-            var db = new Database(TestDatabase.ConnectionString, dbType, SqlClientFactory.Instance);
+            var db = new Database(TestDatabase.ConnectionString, dbType, TestDatabase.Factory);
             db.OpenSharedConnection();
             Assert.IsNotNull(db.Connection);
             Assert.IsTrue(db.Connection.State == ConnectionState.Open);
@@ -261,7 +261,7 @@ namespace NPoco.Tests
         public void ConstructorWithConnectionStringDBTypeAndIsolationLevel()
         {
             var dbType = GetConfiguredDatabaseType();
-            var db = new Database(TestDatabase.ConnectionString, dbType, SqlClientFactory.Instance, IsolationLevel.ReadUncommitted);
+            var db = new Database(TestDatabase.ConnectionString, dbType, TestDatabase.Factory, IsolationLevel.ReadUncommitted);
             db.OpenSharedConnection();
             Assert.IsNotNull(db.Connection);
             Assert.IsTrue(db.Connection.State == ConnectionState.Open);
@@ -279,7 +279,7 @@ namespace NPoco.Tests
         public void ConstructorWithConnectionStringDBTypeAndSettings()
         {
             var dbType = GetConfiguredDatabaseType();
-            var db = new Database(TestDatabase.ConnectionString, dbType, SqlClientFactory.Instance, IsolationLevel.ReadUncommitted, false);
+            var db = new Database(TestDatabase.ConnectionString, dbType, TestDatabase.Factory, IsolationLevel.ReadUncommitted, false);
             db.OpenSharedConnection();
             Assert.IsNotNull(db.Connection);
             Assert.IsTrue(db.Connection.State == ConnectionState.Open);
@@ -298,7 +298,7 @@ namespace NPoco.Tests
         {
             var dbType = GetConfiguredDatabaseType();
             //var provider = DbProviderFactories.GetFactory(dbType.GetProviderName());
-            var db = new Database(TestDatabase.ConnectionString, dbType, SqlClientFactory.Instance);
+            var db = new Database(TestDatabase.ConnectionString, dbType, TestDatabase.Factory);
             db.OpenSharedConnection();
             Assert.IsNotNull(db.Connection);
             Assert.IsTrue(db.Connection.State == ConnectionState.Open);
@@ -317,7 +317,7 @@ namespace NPoco.Tests
         {
             var dbType = GetConfiguredDatabaseType();
             //var provider = DbProviderFactories.GetFactory(dbType.GetProviderName());
-            var db = new Database(TestDatabase.ConnectionString, dbType, SqlClientFactory.Instance);
+            var db = new Database(TestDatabase.ConnectionString, dbType, TestDatabase.Factory);
             db.OpenSharedConnection();
             Assert.IsNotNull(db.Connection);
             Assert.IsTrue(db.Connection.State == ConnectionState.Open);
@@ -335,7 +335,7 @@ namespace NPoco.Tests
         public void OpenSharedConnectionLazy()
         {
             var dbType = GetConfiguredDatabaseType();
-            var db = new Database(TestDatabase.ConnectionString, dbType, SqlClientFactory.Instance);
+            var db = new Database(TestDatabase.ConnectionString, dbType, TestDatabase.Factory);
             db.OpenSharedConnection(new OpenConnectionOptions() { Lazy = true });
             Assert.IsNull(db.Connection);
 
@@ -355,7 +355,7 @@ namespace NPoco.Tests
         public void OpenSharedConnectionNotLazy()
         {
             var dbType = GetConfiguredDatabaseType();
-            var db = new Database(TestDatabase.ConnectionString, dbType, SqlClientFactory.Instance);
+            var db = new Database(TestDatabase.ConnectionString, dbType, TestDatabase.Factory);
             db.OpenSharedConnection(new OpenConnectionOptions() { Lazy = false });
             Assert.IsNotNull(db.Connection);
 
@@ -375,7 +375,7 @@ namespace NPoco.Tests
         public void OpenSharedConnectionImplicit()
         {
             var dbType = GetConfiguredDatabaseType();
-            var db = new Database(TestDatabase.ConnectionString, dbType, SqlClientFactory.Instance);
+            var db = new Database(TestDatabase.ConnectionString, dbType, TestDatabase.Factory);
             Assert.IsNull(db.Connection);
 
             var forty2 = db.Single<int>("select 42");

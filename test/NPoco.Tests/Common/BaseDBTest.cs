@@ -7,5 +7,12 @@ namespace NPoco.Tests.Common
     {
         public IDatabase Database { get; set; }
         public TestDatabase TestDatabase { get; set; }
+
+        protected bool IsPostgres => TestDatabase is PostgreSQLDatabase;
+
+        protected void IgnoreOnPostgres(string reason)
+        {
+            if (IsPostgres) NUnit.Framework.Assert.Ignore(reason);
+        }
     }
 }

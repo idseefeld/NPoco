@@ -30,7 +30,7 @@ namespace NPoco.Tests.FluentTests.QueryTests
             var sqlExpression = new DefaultSqlExpression<NullableProperty>(Database);
             sqlExpression.Where(x => x.Age.HasValue && x.Age > 2);
             var whereStatement = sqlExpression.Context.ToWhereStatement();
-            string expected = string.Format("WHERE (({0} is not null) AND ([Age] > @0))", escapedAgeIdentifier);
+            string expected = string.Format("WHERE (({0} is not null) AND ({0} > @0))", escapedAgeIdentifier);
             Assert.AreEqual(expected, whereStatement);
         }
 
@@ -40,7 +40,7 @@ namespace NPoco.Tests.FluentTests.QueryTests
             var sqlExpression = new DefaultSqlExpression<NullableProperty>(Database);
             sqlExpression.Where(x => !x.Age.HasValue && x.Age > 2);
             var whereStatement = sqlExpression.Context.ToWhereStatement();
-            string expected = string.Format("WHERE (NOT ({0} is not null) AND ([Age] > @0))", escapedAgeIdentifier);
+            string expected = string.Format("WHERE (NOT ({0} is not null) AND ({0} > @0))", escapedAgeIdentifier);
             Assert.AreEqual(expected, whereStatement);
         }
 
@@ -50,7 +50,7 @@ namespace NPoco.Tests.FluentTests.QueryTests
             var sqlExpression = new DefaultSqlExpression<NullableProperty>(Database);
             sqlExpression.Where(x => x.Age > 2 && x.Age.HasValue);
             var whereStatement = sqlExpression.Context.ToWhereStatement();
-            string expected = string.Format("WHERE (([Age] > @0) AND ({0} is not null))", escapedAgeIdentifier);
+            string expected = string.Format("WHERE (({0} > @0) AND ({0} is not null))", escapedAgeIdentifier);
             Assert.AreEqual(expected, whereStatement);
         }
 

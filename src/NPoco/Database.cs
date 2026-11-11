@@ -141,10 +141,21 @@ namespace NPoco
 
         private async Task OpenSharedConnectionImp(bool isInternal, bool sync, CancellationToken cancellationToken = default)
         {
+            await EnsureSharedConnectionOpen(isInternal, sync, cancellationToken);
+
+            if (isInternal)
+                await BeginPendingTransaction(sync, cancellationToken);
+        }
+
+        private bool IsSharedConnectionOpen =>
+            _sharedConnection != null && _sharedConnection.State != ConnectionState.Broken && _sharedConnection.State != ConnectionState.Closed;
+
+        private async Task EnsureSharedConnectionOpen(bool isInternal, bool sync, CancellationToken cancellationToken)
+        {
             if (_connectionPassedIn && _sharedConnection != null && _sharedConnection.State != ConnectionState.Open)
                 throw new Exception("You must explicitly open the connection before executing anything when passing in a DbConnection to Database");
 
-            if (_sharedConnection != null && _sharedConnection.State != ConnectionState.Broken && _sharedConnection.State != ConnectionState.Closed)
+            if (IsSharedConnectionOpen)
                 return;
 
             if (!isInternal && OpenConnectionOptions.Lazy)
@@ -188,15 +199,48 @@ namespace NPoco
             }
         }
 
+        // A transaction started on a lazy connection that isn't open yet. BEGIN is sent just before
+        // the first command, so the pooled connection isn't held while the caller does other work.
+        private IsolationLevel? _pendingTransactionIsolationLevel;
+
+        private bool InTransaction => _transaction != null || _pendingTransactionIsolationLevel != null;
+
+        private async Task BeginPendingTransaction(bool sync, CancellationToken cancellationToken)
+        {
+            if (_pendingTransactionIsolationLevel is not { } isolationLevel)
+                return;
+
+            if (sync)
+            {
+                _transaction = _sharedConnection.BeginTransaction(isolationLevel);
+            }
+            else
+            {
+#if NETSTANDARD2_1_OR_GREATER || NET6_0_OR_GREATER
+                _transaction = await _sharedConnection.BeginTransactionAsync(isolationLevel, cancellationToken);
+#else
+                _transaction = _sharedConnection.BeginTransaction(isolationLevel);
+#endif
+            }
+
+            // Cleared only once BEGIN succeeds, so a failed BEGIN is retried rather than running later commands outside the transaction
+            _pendingTransactionIsolationLevel = null;
+
+            if (sync)
+                OnBeginTransactionInternal();
+            else
+                await OnBeginTransactionInternalAsync(cancellationToken);
+        }
+
         private void CloseSharedConnectionInternal()
         {
-            if (ShouldCloseConnectionAutomatically && _transaction == null)
+            if (ShouldCloseConnectionAutomatically && !InTransaction)
                 CloseSharedConnection();
         }
 
         private async Task CloseSharedConnectionInternalAsync()
         {
-            if (ShouldCloseConnectionAutomatically && _transaction == null)
+            if (ShouldCloseConnectionAutomatically && !InTransaction)
                 await CloseSharedConnectionAsync();
         }
 
@@ -215,6 +259,8 @@ namespace NPoco
 #pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
         {
             if (KeepConnectionAlive) return;
+
+            _pendingTransactionIsolationLevel = null;
 
             if (_transaction != null)
             {
@@ -348,19 +394,29 @@ namespace NPoco
         // Use `using (var scope=db.Transaction) { scope.Complete(); }` to ensure correct semantics
         public void BeginTransaction(IsolationLevel isolationLevel)
         {
-            if (_transaction == null)
+            if (!InTransaction)
             {
                 TransactionCount = 0;
-                OpenSharedConnectionInternal();
-                _transaction = _sharedConnection.BeginTransaction(isolationLevel);
-                OnBeginTransactionInternal();
+                if (ShouldDeferTransaction)
+                {
+                    _pendingTransactionIsolationLevel = isolationLevel;
+                }
+                else
+                {
+                    OpenSharedConnectionInternal();
+                    _transaction = _sharedConnection.BeginTransaction(isolationLevel);
+                    OnBeginTransactionInternal();
+                }
             }
 
-            if (_transaction != null)
+            if (InTransaction)
             {
                 TransactionCount++;
             }
         }
+
+        // Once the connection is open there's nothing to save by deferring, and Connection/Transaction stay consistent for callers using them directly
+        private bool ShouldDeferTransaction => OpenConnectionOptions.Lazy && !_connectionPassedIn && !IsSharedConnectionOpen;
 
         public async Task<IAsyncTransaction> GetTransactionAsync()
         {
@@ -379,19 +435,26 @@ namespace NPoco
 
         public async Task BeginTransactionAsync(IsolationLevel isolationLevel, CancellationToken cancellationToken = default)
         {
-            if (_transaction == null)
+            if (!InTransaction)
             {
                 TransactionCount = 0;
-                await OpenSharedConnectionInternalAsync(cancellationToken);
+                if (ShouldDeferTransaction)
+                {
+                    _pendingTransactionIsolationLevel = isolationLevel;
+                }
+                else
+                {
+                    await OpenSharedConnectionInternalAsync(cancellationToken);
 #if NETSTANDARD2_1_OR_GREATER || NET6_0_OR_GREATER
-                _transaction = await _sharedConnection.BeginTransactionAsync(isolationLevel, cancellationToken);
+                    _transaction = await _sharedConnection.BeginTransactionAsync(isolationLevel, cancellationToken);
 #else
-                _transaction = _sharedConnection.BeginTransaction(isolationLevel);
+                    _transaction = _sharedConnection.BeginTransaction(isolationLevel);
 #endif
-                await OnBeginTransactionInternalAsync(cancellationToken);
+                    await OnBeginTransactionInternalAsync(cancellationToken);
+                }
             }
 
-            if (_transaction != null)
+            if (InTransaction)
             {
                 TransactionCount++;
             }
@@ -467,7 +530,7 @@ namespace NPoco
 
         private async Task AbortTransaction(bool fromComplete, bool sync, CancellationToken cancellationToken = default)
         {
-            if (_transaction == null)
+            if (!InTransaction)
             {
                 TransactionIsAborted = false;
                 return;
@@ -481,6 +544,14 @@ namespace NPoco
                     TransactionIsAborted = true;
                     return;
                 }
+            }
+
+            // BEGIN was never sent, so there's nothing to roll back
+            if (_transaction == null)
+            {
+                _pendingTransactionIsolationLevel = null;
+                TransactionIsAborted = false;
+                return;
             }
 
             if (TransactionIsOk())
@@ -567,7 +638,7 @@ namespace NPoco
 
         private async Task CompleteTransactionImp(bool sync, CancellationToken cancellationToken = default)
         {
-            if (_transaction == null)
+            if (!InTransaction)
                 return;
 
             TransactionCount--;
@@ -584,6 +655,13 @@ namespace NPoco
                 {
                     await AbortTransaction(true, false, cancellationToken);
                 }
+                return;
+            }
+
+            // BEGIN was never sent, so there's nothing to commit
+            if (_transaction == null)
+            {
+                _pendingTransactionIsolationLevel = null;
                 return;
             }
 

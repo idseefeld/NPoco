@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project>
-	<PropertyGroup>
-		<VersionPrefix>6.4.1</VersionPrefix>
-	</PropertyGroup>
+
+  <PropertyGroup>
+    <VersionPrefix>6.5.0</VersionPrefix>
+    <TargetFrameworks>net11.0</TargetFrameworks>
+  </PropertyGroup>
+  
 </Project>

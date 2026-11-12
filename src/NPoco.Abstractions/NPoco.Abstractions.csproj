@@ -1,28 +1,25 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-	<Description>Provides abstractions for NPoco</Description>
-	<TargetFrameworks>net462;netstandard2.0;netstandard2.1;net8.0;net10.0;net11.0</TargetFrameworks>
-	<VersionPrefix>6.5.0</VersionPrefix>
-	<TargetFrameworks>net11.0</TargetFrameworks>
-	<AssemblyName>NPoco.Abstractions</AssemblyName>
-	<PackageId>NPoco.Abstractions</PackageId>
-	<PackageTags>orm;sql;micro-orm;database;mvc</PackageTags>
-	<PackageProjectUrl>https://github.com/schotime/NPoco</PackageProjectUrl>
+    <Description>Provides abstractions for NPoco</Description>
+    <AssemblyName>NPoco.Abstractions</AssemblyName>
+    <PackageId>NPoco.Abstractions</PackageId>
+    <PackageTags>orm;sql;micro-orm;database;mvc</PackageTags>
+    <PackageProjectUrl>https://github.com/schotime/NPoco</PackageProjectUrl>
     <Nullable>disable</Nullable>
-	<LangVersion>latest</LangVersion>
-	<RootNamespace>$(MSBuildProjectName.Replace(" ", "_").Replace(".Abstractions", ""))</RootNamespace>
+    <LangVersion>latest</LangVersion>
+    <RootNamespace>$(MSBuildProjectName.Replace(" ", "_").Replace(".Abstractions", ""))</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
-	<PackageReference Condition="'$(TargetFramework)' == 'net462' " Include="System.ValueTuple" Version="4.6.2" />
-	<PackageReference Condition="'$(TargetFramework)' == 'net462' or '$(TargetFramework)' == 'netstandard2.0' " Include="Microsoft.Bcl.AsyncInterfaces" Version="10.0.13" />
-	<PackageReference Include="System.ValueTuple" Version="4.6.2" />
-	<PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="11.0.0" />
-	<PackageReference Include="System.Reflection.Emit.Lightweight" Version="4.7.0" />
+    <PackageReference Include="System.ValueTuple" Version="4.6.2" />
+    <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="10.0.13" />
+    <PackageReference Include="System.ValueTuple" Version="4.6.2" />
+    <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="11.0.0" />
+    <PackageReference Include="System.Reflection.Emit.Lightweight" Version="4.7.0" />
   </ItemGroup>
 
   <ItemGroup>
-	<InternalsVisibleTo Include="NPoco" />
+    <InternalsVisibleTo Include="NPoco" />
   </ItemGroup>
 </Project>
